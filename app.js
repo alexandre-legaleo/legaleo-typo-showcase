@@ -2,11 +2,12 @@
 (() => {
   "use strict";
 
-  // italic: false pour les familles sans italique sur Google Fonts (sinon la requête css2 répond 400).
+  // italic: false pour les familles sans italique sur Google Fonts, static: true pour celles qui
+  // n'existent qu'en graisses fixes (pas de plage 400..700) — sinon la requête css2 répond 400.
   const FONTS = [
     { family: "Manrope", kind: "sans", italic: false, note: "actuelle" },
-    { family: "IBM Plex Serif", kind: "serif" },
-    { family: "Zilla Slab", kind: "serif" },
+    { family: "IBM Plex Serif", kind: "serif", static: true },
+    { family: "Zilla Slab", kind: "serif", static: true },
     { family: "Bitter", kind: "serif" },
     { family: "Newsreader", kind: "serif" },
     { family: "Source Serif 4", kind: "serif", fav: true },
@@ -88,10 +89,12 @@
   state.compare = (Array.isArray(state.compare) ? state.compare : DEFAULTS.compare).filter(byFamily);
 
   // ---------------------------------------------------------------- polices
-  FONTS.forEach(({ family, italic }) => {
+  FONTS.forEach(({ family, italic, static: fixed }) => {
+    // Plage continue pour les polices variables : la graisse se règle par pas de 50.
+    const w = fixed ? ["400", "500", "600", "700"] : ["400..700"];
     const axes = italic === false
-      ? "wght@400;500;600;700"
-      : "ital,wght@0,400;0,500;0,600;0,700;1,400;1,700";
+      ? `wght@${w.join(";")}`
+      : `ital,wght@${[...w.map((x) => `0,${x}`), ...w.map((x) => `1,${x}`)].join(";")}`;
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:${axes}&display=swap`;
@@ -176,6 +179,9 @@
       document.querySelector(`output[for="${el.id}"]`).textContent = fmt(Number(state[k]));
     }
     $("#justify").checked = state.justify;
+    const fixedFonts = [...new Set([state.body, headingFamily(state.body)])].filter((f) => byFamily(f)?.static);
+    $("#weightHint").hidden = state.hw % 100 === 0 || !fixedFonts.length;
+    $("#weightHint").textContent = `${fixedFonts.join(" et ")} : graisses fixes, ${state.hw} s'affiche en graisse voisine.`;
     compareList.querySelectorAll("input").forEach((b) => { b.checked = state.compare.includes(b.value); });
 
     document.querySelectorAll(".tabs button").forEach((b) => {
