@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Legaleo — Banc typo éditeur</title>
+  <meta name="description" content="Banc d'essai typographique pour la zone d'édition des contrats et modèles Legaleo (rte-editor-area)." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Polices chargées une par une par app.js : une famille en échec n'emporte pas les autres. -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <aside class="panel" aria-label="Réglages">
+    <header class="panel__head">
+      <h1 class="panel__title">Banc typo éditeur</h1>
+      <p class="panel__sub">Reproduit <code>.rte-editor-area</code> — page A4 794 px, marges 60 px.</p>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-view="page" aria-selected="true">Page</button>
+      <button role="tab" data-view="compare" aria-selected="false">Comparer</button>
+      <button role="tab" data-view="grid" aria-selected="false">Aperçu</button>
+    </nav>
+
+    <section class="group">
+      <label class="field">
+        <span class="field__label"><span>Police du corps</span><span><kbd>←</kbd><kbd>→</kbd></span></span>
+        <select id="bodyFont"></select>
+      </label>
+      <label class="field">
+        <span class="field__label">Police des titres</span>
+        <select id="headingFont"></select>
+      </label>
+    </section>
+
+    <section class="group">
+      <label class="field">
+        <span class="field__label">Taille du corps <output for="fontSize"></output></span>
+        <input type="range" id="fontSize" min="9" max="13" step="0.5" />
+      </label>
+      <label class="field">
+        <span class="field__label">Interlignage <output for="lineHeight"></output></span>
+        <input type="range" id="lineHeight" min="1.2" max="2" step="0.05" />
+      </label>
+      <label class="field">
+        <span class="field__label">Espace après paragraphe <output for="paraSpace"></output></span>
+        <input type="range" id="paraSpace" min="0" max="1.5" step="0.05" />
+      </label>
+      <label class="field">
+        <span class="field__label">Graisse des titres <output for="headingWeight"></output></span>
+        <input type="range" id="headingWeight" min="400" max="700" step="100" />
+      </label>
+      <label class="field">
+        <span class="field__label">Interlettrage des titres <output for="headingTracking"></output></span>
+        <input type="range" id="headingTracking" min="-0.03" max="0.05" step="0.005" />
+      </label>
+      <label class="field field--inline">
+        <input type="checkbox" id="justify" />
+        <span>Texte justifié</span>
+      </label>
+    </section>
+
+    <section class="group" id="compareGroup" hidden>
+      <span class="field__label">Polices à comparer</span>
+      <div id="compareList" class="checks"></div>
+    </section>
+
+    <section class="group group--actions">
+      <button id="copyCss" class="btn btn--primary">Copier le CSS</button>
+      <button id="share" class="btn">Copier le lien</button>
+      <button id="editText" class="btn">Remplacer le texte</button>
+      <button id="reset" class="btn btn--ghost">Réinitialiser</button>
+      <p id="toast" class="toast" role="status" aria-live="polite"></p>
+    </section>
+  </aside>
+
+  <main class="stage" id="stage">
+    <div class="view view--page" id="viewPage">
+      <div class="scroll">
+        <article class="rte-page" id="page" contenteditable="true" spellcheck="false"></article>
+      </div>
+    </div>
+    <div class="view view--compare" id="viewCompare" hidden>
+      <div class="scroll scroll--x" id="compareStrip"></div>
+    </div>
+    <div class="view view--grid" id="viewGrid" hidden>
+      <div class="grid" id="grid"></div>
+    </div>
+  </main>
+
+  <dialog id="textDialog" class="dialog">
+    <form method="dialog" class="dialog__body">
+      <h2 class="dialog__title">Remplacer le texte d'exemple</h2>
+      <p class="dialog__hint">
+        Colle du HTML (copié depuis l'éditeur Legaleo, par exemple) ou du texte brut.
+        En texte brut : une ligne vide sépare les paragraphes, <code>#</code>, <code>##</code>,
+        <code>###</code> en début de ligne font un titre, <code>- </code> une puce.
+      </p>
+      <textarea id="textInput" rows="14" placeholder="Colle ton texte ici…"></textarea>
+      <div class="dialog__actions">
+        <button value="restore" class="btn btn--ghost" id="restoreSample">Texte d'origine</button>
+        <span class="spacer"></span>
+        <button value="cancel" class="btn">Annuler</button>
+        <button value="apply" class="btn btn--primary" id="applyText">Appliquer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="sample">
+    <h1>CONTRAT DE FRANCHISE</h1>
+    <p><strong>ENTRE LES SOUSSIGNÉS :</strong></p>
+    <p>La société <strong>Maison Exemple</strong>, société par actions simplifiée au capital de 150 000 €, dont le siège social est situé 12 rue de l'Exemple, 75011 Paris, immatriculée au RCS de Paris sous le n° 912 345 678, représentée par Madame Claire Martin, en sa qualité de Présidente,</p>
+    <p>Ci-après dénommée le « <strong>Franchiseur</strong> »,</p>
+    <p style="text-align:center"><em>D'une part,</em></p>
+    <p><strong>ET :</strong></p>
+    <p>La société <span class="var">{{franchise.denomination}}</span>, <span class="var">{{franchise.forme_juridique}}</span> au capital de <span class="var">{{franchise.capital}}</span> €, dont le siège social est situé <span class="var">{{franchise.adresse}}</span>, représentée par <span class="var">{{franchise.representant}}</span>,</p>
+    <p>Ci-après dénommée le « <strong>Franchisé</strong> »,</p>
+    <p style="text-align:center"><em>D'autre part.</em></p>
+    <hr />
+    <h2>PRÉAMBULE</h2>
+    <p>Le Franchiseur a conçu et mis au point un concept original de boutiques spécialisées dans la vente de produits fins, exploité sous l'enseigne « Maison Exemple », reposant sur un savoir-faire substantiel, secret et identifié, constamment enrichi depuis 2011 et transmis au Franchisé au moyen du Manuel opératoire.</p>
+    <p>Conformément aux articles L. 330-3 et R. 330-1 du Code de commerce, le Franchisé reconnaît avoir reçu le Document d'Information Précontractuelle au moins vingt (20) jours avant la signature des présentes, et avoir disposé du temps nécessaire à son examen.</p>
+    <h2>ARTICLE 1 — OBJET DU CONTRAT</h2>
+    <p>Le présent contrat a pour objet de définir les conditions dans lesquelles le Franchiseur concède au Franchisé, qui l'accepte, le droit d'exploiter le concept dans le Territoire défini à l'article 3, en contrepartie du versement des redevances prévues à l'article 7.</p>
+    <h3>1.1 Définitions</h3>
+    <p>Pour l'interprétation et l'exécution du présent contrat, les termes ci-après auront la signification suivante :</p>
+    <ul>
+      <li><strong>Savoir-faire</strong> : ensemble d'informations pratiques non brevetées, résultant de l'expérience du Franchiseur et testées par lui ;</li>
+      <li><strong>Marques</strong> : les marques verbales et figuratives déposées à l'INPI sous les n° 4 123 456 et 4 654 321 ;</li>
+      <li><strong>Point de vente</strong> : le local commercial situé <span class="var">{{crz.adresse_point_vente}}</span>, affecté exclusivement à l'activité franchisée.</li>
+    </ul>
+    <h3>1.2 Durée</h3>
+    <p>Le contrat est conclu pour une durée de sept (7) ans à compter de sa signature. Il ne pourra en aucun cas être renouvelé par tacite reconduction ; toute prolongation fera l'objet d'un avenant écrit, signé six (6) mois au moins avant l'échéance.</p>
+    <h2>ARTICLE 7 — CONDITIONS FINANCIÈRES</h2>
+    <p>En contrepartie de la transmission du savoir-faire et de l'assistance, le Franchisé versera au Franchiseur les sommes suivantes, hors taxes :</p>
+    <table>
+      <thead><tr><th>Nature</th><th>Montant</th><th>Échéance</th></tr></thead>
+      <tbody>
+        <tr><td>Droit d'entrée</td><td>25 000,00 €</td><td>À la signature</td></tr>
+        <tr><td>Redevance d'exploitation</td><td>6 % du CA HT</td><td>Mensuelle, le 10</td></tr>
+        <tr><td>Redevance publicitaire</td><td>1,5 % du CA HT</td><td>Mensuelle, le 10</td></tr>
+        <tr><td>Formation initiale</td><td>3 800,00 €</td><td>Avant l'ouverture</td></tr>
+      </tbody>
+    </table>
+    <h4>7.1 Pénalités de retard</h4>
+    <p>Toute somme non payée à son échéance portera intérêt, de plein droit et sans mise en demeure préalable, au taux de trois fois le taux d'intérêt légal, outre l'indemnité forfaitaire de 40 € prévue à l'article L. 441-10 du Code de commerce.</p>
+    <ol>
+      <li>Le premier retard donnera lieu à une simple relance écrite ;</li>
+      <li>Tout retard supérieur à trente (30) jours ouvrira droit à la résiliation prévue à l'article 15 ;</li>
+      <li>Les frais de recouvrement resteront à la charge exclusive du Franchisé.</li>
+    </ol>
+    <blockquote>Le Franchisé déclare avoir été mis en mesure de vérifier la rentabilité de son projet et ne pouvoir se prévaloir d'aucune garantie de chiffre d'affaires de la part du Franchiseur.</blockquote>
+    <h5>Mentions finales</h5>
+    <p>Fait à Paris, le <span class="var">{{signature.date}}</span>, en deux (2) exemplaires originaux, dont un pour chacune des parties.</p>
+    <table class="sig">
+      <tbody><tr>
+        <td><p><strong>Le Franchisé</strong></p><p>Signature Franchisé :</p></td>
+        <td><p><strong>Le Franchiseur</strong></p><p>Signature Franchiseur :</p></td>
+      </tr></tbody>
+    </table>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
