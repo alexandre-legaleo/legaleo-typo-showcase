@@ -102,6 +102,7 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
   line-height: var(--line-height);
   text-align: var(--text-align);
   hyphens: var(--hyphens);
+  overflow-wrap: break-word; /* comme ProseMirror : une URL longue ne déborde pas */
 }
 .rte-page p { margin: 0 0 var(--para-space) 0; }
 .rte-page p:last-child { margin-bottom: 0; }
