@@ -105,6 +105,15 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
   hyphens: var(--hyphens);
   overflow-wrap: break-word; /* comme ProseMirror : une URL longue ne déborde pas */
 }
+/* Remise à zéro de Tailwind v4 (preflight), que l'app charge via app/globals.css :
+   sans elle, le navigateur ajoute 1em autour des listes, citations, etc. — écarts
+   qui n'existent pas dans l'éditeur. Les règles de editor.css ci-dessous repassent par-dessus. */
+.rte-page *, .rte-page *::before, .rte-page *::after { margin: 0; padding: 0; border: 0 solid; }
+.rte-page :is(sub, sup) { font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+.rte-page sup { top: -0.5em; }
+.rte-page sub { bottom: -0.25em; }
+.rte-page small { font-size: 80%; }
+
 .rte-page p { margin: 0 0 var(--para-space) 0; }
 .rte-page p:last-child { margin-bottom: 0; }
 
@@ -143,7 +152,6 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
 
 .rte-page a { color: #6366f1; text-decoration: underline; cursor: pointer; overflow-wrap: anywhere; }
 .rte-page code { background: #f1f5f9; border-radius: 4px; padding: 2px 6px; font-family: ui-monospace, monospace; font-size: 0.9em; }
-.rte-page small { font-size: 0.85em; }
 
 .rte-page hr { border: none; border-top: 1px solid #e5e7eb; margin: 16px 0; }
 
