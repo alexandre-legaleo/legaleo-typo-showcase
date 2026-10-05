@@ -139,6 +139,10 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
 .rte-page td p { margin: 0; }
 .rte-page table.sig td { border: 0; padding: 12px 0; width: 50%; height: 90px; }
 
+.rte-page a { color: #6366f1; text-decoration: underline; cursor: pointer; overflow-wrap: anywhere; }
+.rte-page code { background: #f1f5f9; border-radius: 4px; padding: 2px 6px; font-family: ui-monospace, monospace; font-size: 0.9em; }
+.rte-page small { font-size: 0.85em; }
+
 .rte-page hr { border: none; border-top: 1px solid #e5e7eb; margin: 16px 0; }
 
 /* Chip de variable (rendu approché du nœud Variable.ts) */
