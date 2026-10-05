@@ -9,10 +9,10 @@
     { family: "Zilla Slab", kind: "serif" },
     { family: "Bitter", kind: "serif" },
     { family: "Newsreader", kind: "serif" },
-    { family: "Source Serif 4", kind: "serif" },
+    { family: "Source Serif 4", kind: "serif", fav: true },
     { family: "Hanken Grotesk", kind: "sans" },
     { family: "Public Sans", kind: "sans" },
-    { family: "Schibsted Grotesk", kind: "sans" },
+    { family: "Schibsted Grotesk", kind: "sans", fav: true },
     { family: "Geist", kind: "sans", italic: false },
     { family: "Inter", kind: "sans" },
     { family: "Source Sans 3", kind: "sans" },
@@ -38,6 +38,8 @@
 
   const $ = (sel) => document.querySelector(sel);
   const byFamily = (f) => FONTS.find((x) => x.family === f);
+  // ★ = favorite retenue (champ fav de FONTS).
+  const named = (f) => (byFamily(f)?.fav ? `★ ${f}` : f);
   const stack = (f) => {
     const font = byFamily(f);
     const fallback = font && font.kind === "serif" ? "Georgia, serif" : "system-ui, sans-serif";
@@ -109,7 +111,7 @@
       const group = document.createElement("optgroup");
       group.label = kind === "serif" ? "Serif" : "Sans serif";
       FONTS.filter((f) => f.kind === kind).forEach((f) => {
-        group.appendChild(new Option(f.note ? `${f.family} — ${f.note}` : f.family, f.family));
+        group.appendChild(new Option(f.note ? `${named(f.family)} — ${f.note}` : named(f.family), f.family));
       });
       sel.appendChild(group);
     }
@@ -138,7 +140,8 @@
         compareList.querySelector(`input[value="${fam}"]`).checked);
       update();
     });
-    label.append(box, " ", f.family);
+    label.append(box, " ", named(f.family));
+    label.title = f.family;
     compareList.appendChild(label);
   });
 
@@ -208,7 +211,7 @@
       const label = document.createElement("div");
       label.className = "compare-col__label";
       const name = document.createElement("span");
-      name.textContent = family;
+      name.textContent = named(family);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = "Ouvrir en page →";
@@ -248,9 +251,10 @@
           <h3></h3><p></p><p><em>Le Franchisé reconnaît avoir reçu le DIP.</em> <strong>Fait à Paris.</strong></p>
           <p class="card__digits"></p>
         </div>`;
-      card.querySelector("strong").textContent = f.family;
+      card.querySelector("strong").textContent = named(f.family);
+      if (f.fav) card.classList.add("card--fav");
       card.querySelector(".card__head span").textContent =
-        (f.kind === "serif" ? "Serif" : "Sans serif") + (f.note ? ` · ${f.note}` : "");
+        (f.kind === "serif" ? "Serif" : "Sans serif") + (f.fav ? " · favorite" : "") + (f.note ? ` · ${f.note}` : "");
       card.querySelector("h3").textContent = CARD_TITLE;
       card.querySelector(".card__body p").textContent = CARD_TEXT;
       card.querySelector(".card__digits").textContent = CARD_DIGITS;
