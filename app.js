@@ -27,7 +27,7 @@
     ps: 0.75,
     hw: 600,
     ht: 0,
-    justify: false,
+    justify: true,
     view: "page",
     compare: ["Manrope", "Source Serif 4", "Inter"],
   };
