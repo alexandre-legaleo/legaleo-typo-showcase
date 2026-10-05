@@ -297,6 +297,17 @@
     update();
   });
 
+  // M maintenue : coup d'œil sur Manrope, sans toucher aux réglages.
+  const isTyping = (t) => t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || $("#textDialog").open;
+  const peek = (on) => root.classList.toggle("peek", on);
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() !== "m" || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
+    e.preventDefault();
+    peek(true);
+  });
+  document.addEventListener("keyup", (e) => { if (e.key.toLowerCase() === "m") peek(false); });
+  window.addEventListener("blur", () => peek(false));
+
   const toast = $("#toast");
   let toastTimer;
   function say(msg) {
