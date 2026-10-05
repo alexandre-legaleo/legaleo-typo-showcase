@@ -19,6 +19,8 @@
   --heading-weight: 600;
   --heading-weight-h1: 700;
   --heading-tracking: 0em;
+  --heading-before: 0.5em;
+  --heading-after: 0.5em;
   --text-align: left;
   --hyphens: manual; /* l'éditeur ne coupe pas les mots */
 }
@@ -108,7 +110,7 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
   font-family: var(--heading-font);
   font-weight: var(--heading-weight);
   letter-spacing: var(--heading-tracking);
-  margin: 0.5em 0;
+  margin: var(--heading-before) 0 var(--heading-after);
   text-align: left;
   line-height: 1.3;
 }

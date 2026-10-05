@@ -27,6 +27,8 @@
     ps: 0.75,
     hw: 600,
     ht: 0,
+    hb: 0.5, // espace avant les titres (em du titre)
+    ha: 0.5, // espace après
     justify: true,
     view: "page",
     compare: ["Manrope", "Source Serif 4", "Inter"],
@@ -56,7 +58,7 @@
     for (const [k, v] of params) {
       if (k === "compare") out.compare = v.split("|").filter(byFamily);
       else if (k === "justify") out.justify = v === "1";
-      else if (["size", "lh", "ps", "hw", "ht"].includes(k)) out[k] = Number(v);
+      else if (["size", "lh", "ps", "hw", "ht", "hb", "ha"].includes(k)) out[k] = Number(v);
       else out[k] = v;
     }
     if (out.body && !byFamily(out.body)) delete out.body;
@@ -118,6 +120,8 @@
     ps: { el: $("#paraSpace"), fmt: (v) => `${v.toFixed(2)} em` },
     hw: { el: $("#headingWeight"), fmt: (v) => String(v) },
     ht: { el: $("#headingTracking"), fmt: (v) => `${v > 0 ? "+" : ""}${v.toFixed(3)} em` },
+    hb: { el: $("#headingBefore"), fmt: (v) => `${v.toFixed(2)} em` },
+    ha: { el: $("#headingAfter"), fmt: (v) => `${v.toFixed(2)} em` },
   };
 
   const compareList = $("#compareList");
@@ -152,6 +156,8 @@
     root.style.setProperty("--heading-weight", String(state.hw));
     root.style.setProperty("--heading-weight-h1", String(Math.min(state.hw + 100, 700)));
     root.style.setProperty("--heading-tracking", `${state.ht}em`);
+    root.style.setProperty("--heading-before", `${state.hb}em`);
+    root.style.setProperty("--heading-after", `${state.ha}em`);
     root.style.setProperty("--text-align", state.justify ? "justify" : "left");
     root.style.setProperty("--hyphens", state.justify ? "auto" : "manual");
   }
@@ -319,6 +325,7 @@
 .rte-wrapper .ProseMirror :is(h1, h2, h3, h4, h5, h6) {${headRule}
   font-weight: ${state.hw};
   letter-spacing: ${state.ht}em;
+  margin: ${state.hb}em 0 ${state.ha}em;
 }
 .rte-wrapper .ProseMirror h1 { font-weight: ${Math.min(state.hw + 100, 700)}; }
 `;
