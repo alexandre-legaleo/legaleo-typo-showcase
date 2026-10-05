@@ -8,7 +8,6 @@
     { family: "IBM Plex Serif", kind: "serif" },
     { family: "Zilla Slab", kind: "serif" },
     { family: "Bitter", kind: "serif" },
-    { family: "Literata", kind: "serif" },
     { family: "Newsreader", kind: "serif" },
     { family: "Source Serif 4", kind: "serif" },
     { family: "Hanken Grotesk", kind: "sans" },
@@ -81,6 +80,10 @@
   try { saved = JSON.parse(store.get(STORE_STATE) || "{}"); } catch { saved = {}; }
   // Le lien partagé a priorité sur la mémoire locale.
   const state = { ...DEFAULTS, ...saved, ...readHash() };
+  // Une police retirée de FONTS peut traîner dans la mémoire locale ou un vieux lien.
+  if (!byFamily(state.body)) state.body = DEFAULTS.body;
+  if (state.heading && !byFamily(state.heading)) state.heading = "";
+  state.compare = (Array.isArray(state.compare) ? state.compare : DEFAULTS.compare).filter(byFamily);
 
   // ---------------------------------------------------------------- polices
   FONTS.forEach(({ family, italic }) => {
