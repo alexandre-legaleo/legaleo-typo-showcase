@@ -20,11 +20,14 @@ d'où sa présence comme référence.
 
 ## Utilisation
 
+- **★ Recommandation / Ma version** : la reco (`RECO` en tête de `app.js`, la même pour tous) et
+  les réglages du visiteur (gardés dans son navigateur). Toucher un réglage depuis la reco crée
+  « Ma version » à partir de la reco. Maintenir `R` : voir la reco sans quitter sa version.
 - **Page** : le texte sur une page, éditable directement. `←` / `→` font défiler les polices.
 - **Comparer** : les polices cochées côte à côte, mêmes réglages.
 - **Aperçu** : un extrait par police, clic pour l'ouvrir en page.
 - **Copier le CSS** : les règles à coller dans `editor.css`, avec l'import `next/font/google` correspondant.
-- **Copier le lien** : l'URL porte tous les réglages (pas le texte).
+- **Copier le lien** : l'URL porte tous les réglages (pas le texte) ; depuis la reco, elle suit `RECO`.
 - **Remplacer le texte** : HTML (copié depuis l'éditeur) ou texte brut (`#` titre, `- ` puce).
   Le texte perso reste dans le navigateur (`localStorage`) et n'est envoyé nulle part.
 

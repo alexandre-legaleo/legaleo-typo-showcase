@@ -24,6 +24,7 @@
     heading: "", // "" = identique au corps
     size: 11,
     lh: 1.6,
+    pb: 0, // espace avant paragraphe (em)
     ps: 0.75,
     hw: 600,
     ht: 0,
@@ -32,9 +33,30 @@
     justify: true,
     view: "page",
     compare: ["Manrope", "Source Serif 4", "Inter"],
+    preset: "reco", // "reco" = RECO, "mine" = réglages du visiteur
+  };
+
+  // Réglages typo couverts par les presets (la vue et la liste à comparer restent communes).
+  const TYPO = ["body", "heading", "size", "lh", "pb", "ps", "hw", "ht", "hb", "ha", "justify"];
+  const typoOf = (o) => Object.fromEntries(TYPO.map((k) => [k, o[k]]));
+
+  // ★ Reco Alex : les réglages proposés, identiques pour tous les visiteurs.
+  const RECO = {
+    body: "Schibsted Grotesk",
+    heading: "",
+    size: 11,
+    lh: 1.5,
+    pb: 0.6,
+    ps: 1.1,
+    hw: 600,
+    ht: 0,
+    hb: 1.4,
+    ha: 0.3,
+    justify: true,
   };
 
   const STORE_STATE = "typo-showcase:state";
+  const STORE_MINE = "typo-showcase:mine";
   const STORE_TEXT = "typo-showcase:text";
 
   const $ = (sel) => document.querySelector(sel);
@@ -60,7 +82,7 @@
     for (const [k, v] of params) {
       if (k === "compare") out.compare = v.split("|").filter(byFamily);
       else if (k === "justify") out.justify = v === "1";
-      else if (["size", "lh", "ps", "hw", "ht", "hb", "ha"].includes(k)) out[k] = Number(v);
+      else if (["size", "lh", "pb", "ps", "hw", "ht", "hb", "ha"].includes(k)) out[k] = Number(v);
       else out[k] = v;
     }
     if (out.body && !byFamily(out.body)) delete out.body;
@@ -71,6 +93,8 @@
   function writeHash() {
     const p = new URLSearchParams();
     for (const k of Object.keys(DEFAULTS)) {
+      // Lien vers la reco : sans les valeurs, il suit RECO si elle change.
+      if (state.preset === "reco" && TYPO.includes(k)) continue;
       const v = state[k];
       if (k === "compare") p.set(k, v.join("|"));
       else if (k === "justify") p.set(k, v ? "1" : "0");
@@ -79,13 +103,23 @@
     history.replaceState(null, "", "#" + p.toString());
   }
 
-  let saved = {};
-  try { saved = JSON.parse(store.get(STORE_STATE) || "{}"); } catch { saved = {}; }
-  // Le lien partagé a priorité sur la mémoire locale.
-  const state = { ...DEFAULTS, ...saved, ...readHash() };
+  const readJson = (key) => { try { return JSON.parse(store.get(key) || "{}"); } catch { return {}; } };
+  const saved = readJson(STORE_STATE);
+  const hash = readHash();
+  const hashTypo = TYPO.some((k) => k in hash);
+  // Avant les presets, les réglages perso vivaient dans STORE_STATE.
+  let mine = typoOf({ ...RECO, ...(store.get(STORE_MINE) ? readJson(STORE_MINE) : saved) });
+  // Le lien partagé a priorité sur la mémoire locale ; un lien avec réglages ouvre « Ma version ».
+  const state = { ...DEFAULTS, ...saved, ...hash };
+  if (state.preset !== "mine" && state.preset !== "reco") state.preset = DEFAULTS.preset;
+  if (hashTypo && hash.preset !== "reco") {
+    state.preset = "mine";
+    mine = { ...mine, ...typoOf({ ...mine, ...hash }) };
+  }
   // Une police retirée de FONTS peut traîner dans la mémoire locale ou un vieux lien.
-  if (!byFamily(state.body)) state.body = DEFAULTS.body;
-  if (state.heading && !byFamily(state.heading)) state.heading = "";
+  if (!byFamily(mine.body)) mine.body = RECO.body;
+  if (mine.heading && !byFamily(mine.heading)) mine.heading = "";
+  Object.assign(state, state.preset === "reco" ? RECO : mine);
   state.compare = (Array.isArray(state.compare) ? state.compare : DEFAULTS.compare).filter(byFamily);
 
   // ---------------------------------------------------------------- polices
@@ -125,6 +159,7 @@
   const ranges = {
     size: { el: $("#fontSize"), fmt: (v) => `${v} pt` },
     lh: { el: $("#lineHeight"), fmt: (v) => v.toFixed(2) },
+    pb: { el: $("#paraBefore"), fmt: (v) => `${v.toFixed(2)} em` },
     ps: { el: $("#paraSpace"), fmt: (v) => `${v.toFixed(2)} em` },
     hw: { el: $("#headingWeight"), fmt: (v) => String(v) },
     ht: { el: $("#headingTracking"), fmt: (v) => `${v > 0 ? "+" : ""}${v.toFixed(3)} em` },
@@ -154,21 +189,22 @@
   const sampleHtml = $("#sample").innerHTML.trim();
   page.innerHTML = store.get(STORE_TEXT) || sampleHtml;
 
-  function headingFamily(body) { return state.heading || body; }
+  function headingFamily(body, s = state) { return s.heading || body; }
 
-  function applyVars() {
-    root.style.setProperty("--body-font", stack(state.body));
-    root.style.setProperty("--heading-font", stack(headingFamily(state.body)));
-    root.style.setProperty("--font-size", `${state.size}pt`);
-    root.style.setProperty("--line-height", String(state.lh));
-    root.style.setProperty("--para-space", `${state.ps}em`);
-    root.style.setProperty("--heading-weight", String(state.hw));
-    root.style.setProperty("--heading-weight-h1", String(Math.min(state.hw + 100, 700)));
-    root.style.setProperty("--heading-tracking", `${state.ht}em`);
-    root.style.setProperty("--heading-before", `${state.hb}em`);
-    root.style.setProperty("--heading-after", `${state.ha}em`);
-    root.style.setProperty("--text-align", state.justify ? "justify" : "left");
-    root.style.setProperty("--hyphens", state.justify ? "auto" : "manual");
+  function applyVars(s = state) {
+    root.style.setProperty("--body-font", stack(s.body));
+    root.style.setProperty("--heading-font", stack(headingFamily(s.body, s)));
+    root.style.setProperty("--font-size", `${s.size}pt`);
+    root.style.setProperty("--line-height", String(s.lh));
+    root.style.setProperty("--para-before", `${s.pb}em`);
+    root.style.setProperty("--para-space", `${s.ps}em`);
+    root.style.setProperty("--heading-weight", String(s.hw));
+    root.style.setProperty("--heading-weight-h1", String(Math.min(s.hw + 100, 700)));
+    root.style.setProperty("--heading-tracking", `${s.ht}em`);
+    root.style.setProperty("--heading-before", `${s.hb}em`);
+    root.style.setProperty("--heading-after", `${s.ha}em`);
+    root.style.setProperty("--text-align", s.justify ? "justify" : "left");
+    root.style.setProperty("--hyphens", s.justify ? "auto" : "manual");
   }
 
   function syncControls() {
@@ -187,16 +223,37 @@
     document.querySelectorAll(".tabs button").forEach((b) => {
       b.setAttribute("aria-selected", String(b.dataset.view === state.view));
     });
+    document.querySelectorAll(".presets button").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.preset === state.preset));
+    });
     $("#viewPage").hidden = state.view !== "page";
     $("#viewCompare").hidden = state.view !== "compare";
     $("#viewGrid").hidden = state.view !== "grid";
     $("#compareGroup").hidden = state.view !== "compare";
   }
 
-  function pick(family) {
-    state.body = family;
-    state.view = "page";
+  // Toute retouche d'un réglage typo passe par ici : depuis la reco, elle devient « Ma version »
+  // (qui repart de la reco, l'ancienne version est remplacée).
+  function tweak(change) {
+    change();
+    if (state.preset === "reco") {
+      state.preset = "mine";
+      say("Ma version : la reco Alex + ta retouche.");
+    }
+    mine = typoOf(state);
+    store.set(STORE_MINE, JSON.stringify(mine));
     update();
+  }
+
+  function showPreset(name) {
+    state.preset = name;
+    Object.assign(state, name === "reco" ? RECO : mine);
+    update();
+  }
+
+  function pick(family) {
+    state.view = "page";
+    tweak(() => { state.body = family; });
     $("#viewPage .scroll").scrollTop = 0;
   }
 
@@ -279,12 +336,15 @@
   }
 
   // ---------------------------------------------------------------- événements
-  bodySel.addEventListener("change", () => { state.body = bodySel.value; update(); });
-  headSel.addEventListener("change", () => { state.heading = headSel.value; update(); });
+  bodySel.addEventListener("change", () => tweak(() => { state.body = bodySel.value; }));
+  headSel.addEventListener("change", () => tweak(() => { state.heading = headSel.value; }));
   for (const [k, { el }] of Object.entries(ranges)) {
-    el.addEventListener("input", () => { state[k] = Number(el.value); update(); });
+    el.addEventListener("input", () => tweak(() => { state[k] = Number(el.value); }));
   }
-  $("#justify").addEventListener("change", (e) => { state.justify = e.target.checked; update(); });
+  $("#justify").addEventListener("change", (e) => tweak(() => { state.justify = e.target.checked; }));
+  document.querySelectorAll(".presets button").forEach((b) => {
+    b.addEventListener("click", () => showPreset(b.dataset.preset));
+  });
   document.querySelectorAll(".tabs button").forEach((b) => {
     b.addEventListener("click", () => { state.view = b.dataset.view; update(); });
   });
@@ -303,8 +363,7 @@
     e.preventDefault();
     const i = FONTS.findIndex((f) => f.family === state.body);
     const n = FONTS.length;
-    state.body = FONTS[(i + (e.key === "ArrowRight" ? 1 : -1) + n) % n].family;
-    update();
+    tweak(() => { state.body = FONTS[(i + (e.key === "ArrowRight" ? 1 : -1) + n) % n].family; });
   });
 
   // M maintenue : coup d'œil sur Manrope, sans toucher aux réglages.
@@ -317,6 +376,19 @@
   });
   document.addEventListener("keyup", (e) => { if (e.key.toLowerCase() === "m") peek(false); });
   window.addEventListener("blur", () => peek(false));
+
+  // R maintenue : coup d'œil sur la recommandation depuis « Ma version ».
+  const peekReco = (on) => {
+    root.classList.toggle("peek-reco", on);
+    applyVars(on ? RECO : state);
+  };
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() !== "r" || e.repeat || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
+    e.preventDefault();
+    peekReco(true);
+  });
+  document.addEventListener("keyup", (e) => { if (e.key.toLowerCase() === "r") peekReco(false); });
+  window.addEventListener("blur", () => peekReco(false));
 
   const toast = $("#toast");
   let toastTimer;
@@ -344,7 +416,7 @@
   line-height: ${state.lh};${state.justify ? "\n  text-align: justify;\n  hyphens: auto;" : ""}
 }
 .rte-wrapper.page-layout .ProseMirror { font-size: ${state.size}pt; }
-.rte-wrapper .ProseMirror p { margin: 0 0 ${state.ps}em 0; }
+.rte-wrapper .ProseMirror p { margin: ${state.pb}em 0 ${state.ps}em 0; }
 
 .rte-wrapper .ProseMirror :is(h1, h2, h3, h4, h5, h6) {${headRule}
   font-weight: ${state.hw};
@@ -358,9 +430,10 @@
   $("#copyCss").addEventListener("click", () => copy(cssSnippet(), "CSS copié."));
   $("#share").addEventListener("click", () => copy(location.href, "Lien copié (réglages inclus, pas le texte)."));
   $("#reset").addEventListener("click", () => {
-    Object.assign(state, DEFAULTS);
-    update();
-    say("Réglages réinitialisés.");
+    mine = { ...RECO };
+    store.set(STORE_MINE, JSON.stringify(mine));
+    showPreset("mine");
+    say("Ma version repart de la recommandation.");
   });
 
   // ---------------------------------------------------------------- texte perso

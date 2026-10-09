@@ -15,6 +15,7 @@
   --heading-font: var(--body-font);
   --font-size: 11pt;
   --line-height: 1.6;
+  --para-before: 0;
   --para-space: 0.75em;
   --heading-weight: 600;
   --heading-weight-h1: 700;
@@ -55,6 +56,25 @@ kbd { font: 10px ui-monospace, monospace; border: 1px solid var(--ui-border); bo
 .tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: #f3f4f6; border-radius: 8px; padding: 3px; }
 .tabs button { border: 0; background: transparent; padding: 7px 0; border-radius: 6px; font: inherit; font-weight: 500; color: var(--ui-muted); cursor: pointer; }
 .tabs button[aria-selected="true"] { background: #fff; color: var(--ui-text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+/* Presets : deux cartes de choix, ambre = reco (comme les favorites ★), teal = version perso. */
+.presets-block { display: flex; flex-direction: column; gap: 8px; }
+.presets__hint { font-weight: 400; color: var(--ui-muted); font-size: 12px; }
+.presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.preset {
+  --c-bg: var(--ui-accent-soft); --c-border: var(--ui-accent); --c-text: var(--ui-accent);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  padding: 9px 12px; border: 1px solid var(--ui-border); border-radius: 8px;
+  background: #fff; font: inherit; text-align: left; color: var(--ui-muted); cursor: pointer;
+  transition: border-color .12s, background-color .12s, box-shadow .12s;
+}
+.preset--reco { --c-bg: #fff8e1; --c-border: #f0c96a; --c-text: #92400e; }
+.preset strong { font-size: 13px; font-weight: 600; color: var(--ui-text); white-space: nowrap; }
+.preset small { font-size: 11px; }
+.preset:hover { border-color: var(--c-border); }
+.preset:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--c-bg); border-color: var(--c-border); }
+.preset[aria-pressed="true"] { background: var(--c-bg); border-color: var(--c-border); box-shadow: inset 0 0 0 1px var(--c-border); color: var(--c-text); }
+.preset[aria-pressed="true"] strong { color: var(--c-text); }
 
 .group { display: flex; flex-direction: column; gap: 12px; }
 .group + .group { border-top: 1px solid var(--ui-border); padding-top: 16px; }
@@ -114,7 +134,7 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
 .rte-page sub { bottom: -0.25em; }
 .rte-page small { font-size: 80%; }
 
-.rte-page p { margin: 0 0 var(--para-space) 0; }
+.rte-page p { margin: var(--para-before) 0 var(--para-space) 0; }
 .rte-page p:last-child { margin-bottom: 0; }
 
 .rte-page :is(h1, h2, h3, h4, h5, h6) {
@@ -202,7 +222,7 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
 .card__head strong { color: var(--ui-text); font-size: 13px; }
 .card__body { padding: 16px 18px 18px; font-family: var(--card-font); font-size: var(--font-size); line-height: var(--line-height); color: #111827; }
 .card__body h3 { font-size: 14pt; margin: 0 0 .4em; font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); font-family: var(--card-heading-font, var(--card-font)); line-height: 1.3; }
-.card__body p { margin: 0 0 var(--para-space); }
+.card__body p { margin: var(--para-before) 0 var(--para-space); }
 .card__body p:last-child { margin: 0; }
 .card__digits { font-size: 10pt; color: #4b5563; }
 
@@ -220,7 +240,9 @@ input[type="checkbox"] { accent-color: var(--ui-accent); }
   background: var(--ui-text); color: #fff; font-size: 12px; font-weight: 600;
   opacity: 0; pointer-events: none; transition: opacity .12s;
 }
-.peek .peek-badge { opacity: 1; }
+.peek .peek-badge:not(.peek-badge--reco) { opacity: 1; }
+/* Touche R maintenue : réglages recommandés (app.js ▸ peekReco) */
+.peek-reco .peek-badge--reco { opacity: 1; }
 
 /* ------------------------------------------------------------------ */
 /* Dialog                                                              */
